@@ -114,7 +114,7 @@ See the CustomTypes.xojo_code example for how to extend the framework to handle 
 - Initialize the ConfigManager early in your application lifecycle (App.Open)
 - Define custom properties for your application's specific configuration needs
 - Use appropriate data types for your properties
-- Consider encrypting sensitive data (e.g., passwords) before storing
+- Consider encrypting sensitive data (e.g., passwords) before storing, or use a key vault for secrets
 - For nested configuration, use the YAML mapping capabilities
 
 ## Notes on Formatting
