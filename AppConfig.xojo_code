@@ -61,20 +61,32 @@ Inherits ConfigManager
 		AppVersion As String = "1.0.0"
 	#tag EndProperty
 
-	#tag Property, Flags = &h21
-		Private CustomSettings As Dictionary
+	#tag Property, Flags = &h0
+		CustomSettings As Dictionary
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		DarkModeEnabled As Boolean = False
 	#tag EndProperty
 
-	#tag Property, Flags = &h21
-		Private LastRunDate As DateTime
+	#tag Property, Flags = &h0
+		FontName As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		FontSize As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		LastRunDate As DateTime
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		LogLevel As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		MarkAsModified As Boolean
 	#tag EndProperty
 
 	#tag Property, Flags = &h21
@@ -86,11 +98,31 @@ Inherits ConfigManager
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
+		PreferredLanguage As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
 		RecentFiles() As String
 	#tag EndProperty
 
 	#tag Property, Flags = &h0
 		UserName As String
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		WindowHeight As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		WindowPositionX As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		WindowPositionY As Integer
+	#tag EndProperty
+
+	#tag Property, Flags = &h0
+		WindowWidth As Integer
 	#tag EndProperty
 
 

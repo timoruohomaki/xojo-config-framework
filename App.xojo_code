@@ -71,18 +71,94 @@ Inherits DesktopApplication
 	#tag EndEvent
 
 
+	#tag Method, Flags = &h21
+		Private Sub ApplyCustomDarkTheme()
+		  // Apply custom styling for controls that don't automatically
+		  // respond to system dark mode changes
+		  
+		  // Example: Apply to main window if it exists
+		  If MainWindow <> Nil Then
+		    // Custom styling for specific controls if needed
+		    For i As Integer = 0 To MainWindow.ControlCount - 1
+		      var control As Control = MainWindow.Control(i)
+		      
+		      // Add custom control-specific styling here
+		      // For example, third-party controls or controls with custom drawing
+		      If control IsA MyCustomControl Then
+		        // Apply custom dark mode styling
+		      End If
+		    Next
+		  End If
+		  
+		  // Apply to any other windows that are open
+		  For i As Integer = 0 To WindowCount - 1
+		    var win As Window = Window(i)
+		    If win <> Nil And win <> MainWindow Then
+		      // Apply custom styling as needed
+		    End If
+		  Next
+		End Sub
+	#tag EndMethod
+
 	#tag Method, Flags = &h0
 		Sub ApplyDarkMode()
-		  // Implementation would depend on how your app handles theming
-		  // This is just a placeholder
-		  #If TargetMacOS Then
-		    If MacOSLib.Available Then
-		      // Use MacOSLib to set dark appearance
-		      // MacOSLib.NSApplication.sharedApplication.appearance = MacOSLib.NSAppearance.appearanceNamed(MacOSLib.NSAppearance.NSAppearanceNameDarkAqua)
-		    End If
-		  #ElseIf TargetWindows Then
-		    // Windows-specific dark mode implementation
+		  // Set the application-wide dark mode setting
+		  #If DebugBuild Then
+		    System.DebugLog("Applying dark mode")
 		  #EndIf
+		  
+		  #If TargetMacOS Or TargetWindows Then
+		    // Use Xojo's built-in dark mode support
+		    App.DarkModeEnabled = True
+		    
+		    // Update the system colors based on the new dark mode setting
+		    // This will affect default control colors automatically
+		    App.UpdateSystemColors
+		    
+		    // For custom controls that don't automatically respond to system colors,
+		    // we can manually update them
+		    ApplyCustomDarkTheme()
+		  #ElseIf TargetLinux Then
+		    // Linux implementation - may require more custom work
+		    App.DarkModeEnabled = True
+		    App.UpdateSystemColors
+		    ApplyCustomDarkTheme()
+		    System.DebugLog("Dark mode applied for Linux - custom theming may be required")
+		  #EndIf
+		  
+		  // Store the setting in config
+		  Config.DarkModeEnabled = True
+		End Sub
+	#tag EndMethod
+
+	#tag Method, Flags = &h0
+		Sub ApplyDarkThemeToControls(control as Control)
+		  // Apply dark theme colors based on control type
+		  If control IsA DesktopTextField Then
+		    DesktopTextField(control).BackgroundColor = &c333333
+		    DesktopTextField(control).TextColor = &cEEEEEE
+		  ElseIf control IsA DesktopTextArea Then
+		    DesktopTextArea(control).BackgroundColor = &c333333
+		    DesktopTextArea(control).TextColor = &cEEEEEE
+		  ElseIf control IsA DesktopButton Then
+		    DesktopButton(control).BackgroundColor = &c444444
+		  ElseIf control IsA DesktopListBox Then
+		    DesktopListBox(control).BackgroundColor = &c333333
+		    DesktopListBox(control).TextColor = &cEEEEEE
+		  End If
+		  
+		  // Check if the control is a container and process its children
+		  If control IsA DesktopContainer Then
+		    var container As DesktopContainer = DesktopContainer(control)
+		    For i As Integer = 0 To container.ControlCount - 1
+		      ApplyDarkThemeToControls(container.Control(i))
+		    Next
+		  ElseIf control IsA DesktopWindow Then
+		    var window As DesktopWindow = DesktopWindow(control)
+		    For i As Integer = 0 To window.ControlCount - 1
+		      ApplyDarkThemeToControls(window.Control(i))
+		    Next
+		  End If
 		End Sub
 	#tag EndMethod
 
