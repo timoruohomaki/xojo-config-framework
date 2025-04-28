@@ -1,23 +1,22 @@
 # Xojo Configuration Manager
 
-A framework for managing local configuration in Xojo applications using YAML format.
+A modern, flexible, and automated framework for managing local configuration in Xojo applications using YAML format.
 
 ## Overview
 
 This framework provides a clean, object-oriented approach to managing application configuration in Xojo. The configuration is stored in YAML format using the Einhugur YAML plugin and is saved in the user's preferences folder.
 
+The key feature of this framework is its use of introspection to automatically handle property serialization based on visibility - all public properties are automatically saved in the configuration file, while private properties (starting with "m") are ignored.
+
 ## Features
 
-- YAML-based configuration storage
-- Automatic loading/saving of configuration
-- Type-safe property access
-- Error handling and validation
-- Support for various data types:
-  - Basic types (String, Integer, Boolean)
-  - DateTime (ISO8601/RFC3339 format)
-  - String arrays
-  - Dictionaries (string:string maps)
-  - Custom object types
+- **Automatic property handling** - All public properties are automatically serialized
+- **YAML-based configuration** - Human-readable configuration format
+- **Automatic loading/saving** - Configuration is loaded on instantiation and saved in the destructor
+- **Type-safe property access** - Support for various data types including strings, numbers, booleans, dates, and collections
+- **Error handling and validation** - Robust error recovery
+- **Locale support** - Works with locale settings where thousand separator is "." and decimal separator is ","
+- **Advanced features** - Support for sections, encryption, and more
 
 ## Requirements
 
@@ -26,25 +25,49 @@ This framework provides a clean, object-oriented approach to managing applicatio
 
 ## Installation
 
-1. Add the ConfigManager class to your Xojo project
-2. Add the ConfigManagerExtensions module to your project (optional, for extended functionality)
+1. Add the ConfigManager.xojo_code class to your Xojo project
+2. Add any additional extensions you need (AdvancedConfigManager, EncryptedConfigManager)
 3. Make sure you have the Einhugur YAML Plugin installed
 
-## Usage
+## Basic Usage
 
-### Basic Setup
+### 1. Create a configuration class
 
-In your App class:
+```xojo
+Class AppConfig Inherits ConfigManager
+  // All public properties will automatically be saved to the config file
+  Public var AppName As String = "My Application"
+  Public var AppVersion As String = "1.0.0"
+  Public var WindowWidth As Integer = 800
+  Public var WindowHeight As Integer = 600
+  Public var DarkModeEnabled As Boolean = False
+  
+  // Private properties will NOT be saved to the config file
+  Private var mTempValue As String = "" // Not saved
+  
+  // Constructor
+  Sub Constructor()
+    // Initialize with default filename
+    Super.Constructor("myapp_config.yaml")
+  End Sub
+End Class
+```
+
+### 2. Integrate with your App class
 
 ```xojo
 // In the App class
-Public var Config As ConfigManager
+Public var Config As AppConfig
 
 Sub Open()
   // Initialize configuration manager
-  Config = New ConfigManager("myapp.yaml")
+  Config = New AppConfig
   
   // Now you can access configuration properties
+  Window1.Title = Config.AppName + " " + Config.AppVersion
+  Window1.Width = Config.WindowWidth
+  Window1.Height = Config.WindowHeight
+  
   If Config.DarkModeEnabled Then
     ApplyDarkMode()
   End If
@@ -52,8 +75,8 @@ End Sub
 
 Sub Close()
   // Save window state to config
-  Config.WindowWidth = MainWindow.Width
-  Config.WindowHeight = MainWindow.Height
+  Config.WindowWidth = Window1.Width
+  Config.WindowHeight = Window1.Height
   
   // Config will be automatically saved in the destructor
   // But you can also save explicitly if needed
@@ -61,65 +84,117 @@ Sub Close()
 End Sub
 ```
 
-### Working with Basic Properties
+### 3. Working with configuration properties
+
+All public properties are automatically saved to and loaded from the YAML file. No additional code is needed to handle property serialization.
 
 ```xojo
-// Read properties
+// Reading properties
 var appName As String = App.Config.AppName
 var isDarkMode As Boolean = App.Config.DarkModeEnabled
 
-// Write properties
+// Writing properties
 App.Config.AppName = "My Awesome App"
 App.Config.DarkModeEnabled = True
-```
 
-### Working with Extended Types
-
-```xojo
-// Get the root node
-var rootNode As EinhugurYAML.YAMLNode = App.Config.mYAMLDocument.RootNode
-
-// Working with dates
-var lastRunDate As New DateTime
-lastRunDate.SQLDateTime = DateTime.Now.SQLDateTime
-App.Config.SaveDateTime(rootNode, "LastRunDate", lastRunDate)
-
-// Working with arrays
-var recentFiles() As String = ["file1.txt", "file2.txt", "file3.txt"]
-App.Config.SaveStringArray(rootNode, "RecentFiles", recentFiles)
-
-// Working with dictionaries
-var prefs As New Dictionary
-prefs.Value("FontName") = "Arial"
-prefs.Value("FontSize") = "12"
-App.Config.SaveDictionary(rootNode, "Preferences", prefs)
-
-// Save all changes
+// Explicitly save (optional - will happen automatically in destructor)
 App.Config.SaveConfig()
 ```
 
-### Working with Custom Types
+## Advanced Features
 
-See the CustomTypes.xojo_code example for how to extend the framework to handle custom object types.
+### Sections (AdvancedConfigManager)
 
-## Structure
+For more complex applications, you can use the AdvancedConfigManager which provides support for sections:
 
-- **ConfigManager.xojo_code**: The main configuration manager class
-- **ConfigManagerExtensions.xojo_code**: Extension methods for additional data types
-- **CustomTypes.xojo_code**: Example showing how to handle custom object types
-- **UsageExample.xojo_code**: Example showing various usage patterns
+```xojo
+var config As New MyAdvancedConfig
+
+// Access section values
+var dbSection As AdvancedConfigManager.ConfigSection = config.GetSection("Database")
+var host As String = dbSection.GetString("Host")
+var port As Integer = dbSection.GetInteger("Port")
+
+// Access nested sections
+var uiSection As AdvancedConfigManager.ConfigSection = config.GetSection("UI")
+var colorsSection As AdvancedConfigManager.ConfigSection = uiSection.GetSection("Colors")
+var backgroundColor As String = colorsSection.GetString("Background")
+```
+
+### Encryption (EncryptedConfigManager)
+
+For sensitive data, you can use the EncryptedConfigManager which automatically encrypts properties that contain words like "Password", "ApiKey", etc.:
+
+```xojo
+var config As New SecureConfig("myapp.yaml", "encryption-key")
+
+// Properties will be automatically encrypted/decrypted
+config.ApiKey = "secret-api-key"
+config.UserPassword = "secure-password"
+
+// Add additional properties to encrypt
+config.AddEncryptedProperty("Credentials")
+```
+
+## Supported Data Types
+
+- String
+- Integer
+- Double (with proper locale handling for decimal separator)
+- Boolean
+- DateTime (stored in ISO8601/RFC3339 format)
+- String Arrays
+- Dictionaries (string:string maps)
+
+## Locale Support
+
+This framework supports locales where:
+- Thousand separator is "."
+- Decimal separator is ","
 
 ## Best Practices
 
-- Initialize the ConfigManager early in your application lifecycle (App.Open)
-- Define custom properties for your application's specific configuration needs
-- Use appropriate data types for your properties
-- Consider encrypting sensitive data (e.g., passwords) before storing, or use a key vault for secrets
-- For nested configuration, use the YAML mapping capabilities
+1. **Default Values**: Always provide reasonable default values for your properties
+2. **Property Naming**: Use public for properties that should be saved, private (with "m" prefix) for internal properties
+3. **Save On Change**: For properties that change often, call `MarkAsModified()` to ensure saving
+4. **Error Handling**: Check logs for any serialization errors
+5. **Encryption**: Use EncryptedConfigManager for sensitive data
 
-## Notes on Formatting
+## Extended Example
 
-This framework respects the locale where thousand separator is '.' and decimal separator is ','.
+Here's a more complete example showing various supported data types:
+
+```xojo
+Class CompleteConfig Inherits ConfigManager
+  // Basic settings
+  Public var AppName As String = "Complete App"
+  Public var AppVersion As String = "1.0.0"
+  
+  // Numbers with locale support
+  Public var TaxRate As Double = 19,5 // Using , as decimal separator
+  Public var Quantity As Integer = 42
+  
+  // Boolean flags
+  Public var DarkModeEnabled As Boolean = False
+  Public var NotificationsEnabled As Boolean = True
+  
+  // Date/time values
+  Public var LastRunDate As DateTime = New DateTime
+  
+  // Collections
+  Public var RecentFiles() As String
+  Public var CustomSettings As Dictionary
+  
+  Sub Constructor()
+    Super.Constructor("complete_config.yaml")
+    
+    // Initialize collections
+    If CustomSettings = Nil Then
+      CustomSettings = New Dictionary
+    End If
+  End Sub
+End Class
+```
 
 ## License
 
